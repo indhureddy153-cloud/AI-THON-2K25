@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Adaptive Learning Platform</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+    h1 { text-align: center; }
+    .box {
+      background: white;
+      padding: 20px;
+      margin: 15px auto;
+      border-radius: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      max-width: 600px;
+    }
+    input, button { margin-top: 10px; padding: 8px; }
+    button {
+      background: #007BFF; color: white; border: none; border-radius: 4px; cursor: pointer;
+    }
+    button:hover { background: #0056b3; }
+    #questions, #analytics, #recommend { margin-top: 15px; }
+  </style>
+</head>
+<body>
+  <h1>📘 Adaptive Learning Platform</h1>
+
+  <!-- Document Upload & Processing -->
+  <div class="box">
+    <h3>Upload Study Material</h3>
+    <input type="file" id="fileInput">
+    <button onclick="processFile()">Process</button>
+    <div id="questions"></div>
+  </div>
+
+  <!-- Submit Score -->
+  <div class="box">
+    <h3>Submit Score</h3>
+    <label>Username:</label><br>
+    <input type="text" id="username"><br>
+    <label>Topic:</label><br>
+    <input type="text" id="topic"><br>
+    <label>Score:</label><br>
+    <input type="number" id="score"><br>
+    <button onclick="submitScore()">Save</button>
+  </div>
+
+  <!-- Analytics -->
+  <div class="box">
+    <h3>Analytics</h3>
+    <button onclick="loadAnalytics()">View</button>
+    <div id="analytics"></div>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="box">
+    <h3>AI Study Recommendation</h3>
+    <button onclick="getRecommendation()">Get Advice</button>
+    <div id="recommend"></div>
+  </div>
+
+<script>
+let progress = [];  // store scores locally in browser
+
+function processFile() {
+  let file = document.getElementById("fileInput").files[0];
+  if (!file) { alert("Please select a file"); return; }
+  let reader = new FileReader();
+  reader.onload = function(e) {
+    let text = e.target.result;
+    let sentences = text.split(/[.?!]/).filter(s => s.trim() !== "");
+    let questions = sentences.slice(0, 3).map((s, i) => Q${i+1}: What is "${s.trim()}" ?);
+    document.getElementById("questions").innerHTML = questions.join("<br>");
+  };
+  reader.readAsText(file);
+}
+
+function submitScore() {
+  let username = document.getElementById("username").value;
+  let topic = document.getElementById("topic").value;
+  let score = parseInt(document.getElementById("score").value);
+  if (!username || !topic || isNaN(score)) { alert("Fill all fields!"); return; }
+  progress.push({username, topic, score});
+  alert("Saved!");
+}
+
+function loadAnalytics() {
+  if (progress.length === 0) { 
+    document.getElementById("analytics").innerText = "No data yet."; 
+    return; 
+  }
+  let summary = {};
+  progress.forEach(p => {
+    if (!summary[p.topic]) summary[p.topic] = [];
+    summary[p.topic].push(p.score);
+  });
+  let output = "";
+  for (let topic in summary) {
+    let avg = summary[topic].reduce((a,b)=>a+b,0) / summary[topic].length;
+    output += ${topic}: ${avg.toFixed(2)}%<br>;
+  }
+  document.getElementById("analytics").innerHTML = output;
+}
+
+function getRecommendation() {
+  if (progress.length === 0) {
+    document.getElementById("recommend").innerText = "Add some progress first!";
+    return;
+  }
+  let summary = {};
+  progress.forEach(p => {
+    if (!summary[p.topic]) summary[p.topic] = [];
+    summary[p.topic].push(p.score);
+  });
+  let weakTopics = [];
+  for (let topic in summary) {
+    let avg = summary[topic].reduce((a,b)=>a+b,0) / summary[topic].length;
+    if (avg < 50) weakTopics.push(topic);
+  }
+  if (weakTopics.length > 0)
+    document.getElementById("recommend").innerText = "Focus more on: " + weakTopics.join(", ");
+  else
+    document.getElementById("recommend").innerText = "Great progress! Move to new topics.";
+}
+</script>
+</body>
+</html>
